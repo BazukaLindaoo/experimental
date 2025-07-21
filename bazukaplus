@@ -6,10 +6,10 @@ local localPlayer = Players.LocalPlayer
 
 -- Usuários autorizados
 local allowedUsers = {
-	["alodozhynn"] = true,
-	["n9xgh"] = true,
-	["JustWX99s"] = true,
-	["lIllIllIllIIIIllII"] = true
+	["itz_kadu22"] = true,
+	["StaffordMakayla783"] = true,
+	["Gabriel263633j"] = true,
+	["THXXGABRIELFF7"] = true
 }
 
 local loopKill = false
