@@ -6,10 +6,10 @@ local localPlayer = Players.LocalPlayer
 
 -- Usuários autorizados
 local allowedUsers = {
+	["Breno010L"] = true,
 	["itz_kadu22"] = true,
-	["StaffordMakayla783"] = true,
-	["Gabriel263633j"] = true,
-	["THXXGABRIELFF7"] = true
+	["Saitama9rsm"] = true,
+	["luc058"] = true
 }
 
 local loopKill = false
@@ -292,13 +292,13 @@ WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your 
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
 
 local Window = redzlib:MakeWindow({
-Title = "Nytherune testing ambiente seguro!",
-SubTitle = "by Wx",
-SaveFolder = "testando | redz lib v5.lua"
+Title = "KiKitk4t Hub ambiente seguro!",
+SubTitle = "by Bazuka",
+SaveFolder = "KitK4t | redz lib v5.lua"
 })
 
 Window:AddMinimizeButton({
-Button = { Image = "rbxassetid://71014873973869", BackgroundTransparency = 0 },
+Button = { Image = "rbxassetid://105882266197529", BackgroundTransparency = 0 },
 Corner = { CornerRadius = UDim.new(35, 1) },
 })
 
@@ -308,4 +308,82 @@ Window:SelectTab(Tab1)
 
 local Section = Tab1:AddSection({"Section"})
 
-local Paragraph = Tab1:AddParagraph({"Script fora do ar", "O script está fora do ar no momento"})
+local Paragraph = Tab1:AddParagraph({"Test", "não tem funções no painel, apenas no chat. "})
+
+
+-- Shutdown Servidor Section
+local Section = Tab1:AddSection({
+    Name = "Shutdown Servidor"
+})
+
+-- Toggle State for Lag FireX
+local toggles = { LagFireX = false }
+
+-- Services
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+
+-- Function to Simulate Normal Click
+local function clickNormally(object)
+    local clickDetector = object:FindFirstChildWhichIsA("ClickDetector")
+    if clickDetector then
+        fireclickdetector(clickDetector)
+    end
+end
+
+-- Function to Lag Game with FireX using Heartbeat
+local function lagarJogoFireX(fireXPath, maxTeleports)
+    if fireXPath then
+        local teleportCount = 0
+        local connection
+        connection = RunService.Heartbeat:Connect(function()
+            if not toggles.LagFireX or teleportCount >= maxTeleports then
+                connection:Disconnect()
+                return
+            end
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = fireXPath.CFrame
+            clickNormally(fireXPath)
+            teleportCount = teleportCount + 1
+        end)
+
+        -- Após 2 minutos, parar tudo e clicar na tela com Heartbeat
+        task.delay(300, function()
+            if toggles.LagFireX then
+                -- Para o loop inicial
+                toggles.LagFireX = false
+                connection:Disconnect()
+
+                -- Teleporta para (0, 0, 0)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 900000, 0)
+
+                -- Simulação de clique infinito na tela com Heartbeat
+                local clickConnection
+                clickConnection = RunService.Heartbeat:Connect(function()
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton1(Vector2.new(500, 500)) -- posição genérica
+                end)
+            end
+        end)
+    else
+        warn("FireX não encontrado.")
+    end
+end
+
+-- Shutdown Servidor Toggle
+Tab1:AddToggle({
+    Name = "[🔥] Shutdown Servidor",
+    Default = false,
+    Callback = function(state)
+        toggles.LagFireX = state
+        if state then
+            local fireXPath = workspace:FindFirstChild("WorkspaceCom"):FindFirstChild("001_GiveTools"):FindFirstChild("FireX")
+            if fireXPath then
+                lagarJogoFireX(fireXPath, 999999999)
+            else
+                warn("FireX não encontrado.")
+            end
+        else
+            print("Shutdown Servidor desativado.")
+        end
+    end
+}
