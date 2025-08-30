@@ -1,182 +1,152 @@
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local localPlayer = Players.LocalPlayer
+local ADM = {}
 
--- Usuários autorizados
 local allowedUsers = {
     ["Breno010L"] = true,
     ["itz_kadu22"] = true,
-    ["Saitama9rsm"] = true,
+    ["saitama9rsm"] = true,
     ["luc058"] = true
 }
 
-if not allowedUsers[localPlayer.Name] then return end
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-local loopKill = false
-local loopTarget = nil
-
--- UI Rayfield
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-local Window = Rayfield:CreateWindow({
-   Name = "KitKat Hub - Painel",
-   LoadingTitle = "Carregando...",
-   LoadingSubtitle = "Rayfield UI",
-   ConfigurationSaving = {Enabled = false},
-   KeySystem = false
-})
-
-local Tab = Window:CreateTab("Funções", 4483362458)
-
--- Dropdown para selecionar player
-local function atualizarListaJogadores()
-   local nomes = {}
-   for _,plr in ipairs(Players:GetPlayers()) do
-      if plr ~= localPlayer then
-         table.insert(nomes, plr.Name)
-      end
-   end
-   return nomes
+if not allowedUsers[player.Name] then
+    return {}
 end
 
-local selectedPlayer = nil
-local PlayerDropdown = Tab:CreateDropdown({
-   Name = "Selecionar Player",
-   Options = atualizarListaJogadores(),
-   CurrentOption = {},
-   MultipleOptions = false,
-   Flag = "SelecionarPlayer",
-   Callback = function(option)
-      selectedPlayer = option[1]
-   end,
-})
-Players.PlayerAdded:Connect(function() PlayerDropdown:Set(atualizarListaJogadores()) end)
-Players.PlayerRemoving:Connect(function() PlayerDropdown:Set(atualizarListaJogadores()) end)
+function ADM.Execute(command, targetPlayerName)
+    local targets = {}
 
--- Kill Player
-Tab:CreateButton({
-   Name = "Kill Player",
-   Callback = function()
-      if selectedPlayer then
-         local plr = Players:FindFirstChild(selectedPlayer)
-         if plr and plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") then
-            plr.Character:FindFirstChildOfClass("Humanoid").Health = 0
-         end
-      end
-   end
-})
-
--- LoopKill Player
-Tab:CreateToggle({
-   Name = "LoopKill Player",
-   CurrentValue = false,
-   Flag = "LoopKillSel",
-   Callback = function(state)
-      if state and selectedPlayer then
-         loopKill = true
-         loopTarget = selectedPlayer
-         task.spawn(function()
-            while loopKill do
-               task.wait(1)
-               local plr = Players:FindFirstChild(loopTarget)
-               if plr and plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") then
-                  plr.Character:FindFirstChildOfClass("Humanoid").Health = 0
-               end
+    if targetPlayerName and targetPlayerName:lower() == "all" then
+        for _, plr in pairs(Players:GetPlayers()) do
+            if not allowedUsers[plr.Name] then
+                table.insert(targets, plr)
             end
-         end)
-      else
-         loopKill = false
-         loopTarget = nil
-      end
-   end
-})
-
--- Kick Player (falso)
-Tab:CreateButton({
-   Name = "Kick Player",
-   Callback = function()
-      if selectedPlayer and selectedPlayer == localPlayer.Name then
-         localPlayer:Kick("Você foi expulso.")
-      end
-   end
-})
-
--- Bring Player
-Tab:CreateButton({
-   Name = "Bring Player",
-   Callback = function()
-      if selectedPlayer then
-         local plr = Players:FindFirstChild(selectedPlayer)
-         if plr and plr.Character and localPlayer.Character then
-            local initiatorHRP = localPlayer.Character:FindFirstChild("HumanoidRootPart")
-            local targetHRP = plr.Character:FindFirstChild("HumanoidRootPart")
-            if initiatorHRP and targetHRP then
-               targetHRP.CFrame = initiatorHRP.CFrame + Vector3.new(0,2,0)
+        end
+    elseif targetPlayerName then
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr.Name:lower():find(targetPlayerName:lower()) or plr.DisplayName:lower():find(targetPlayerName:lower()) then
+                table.insert(targets, plr)
+                break
             end
-         end
-      end
-   end
-})
+        end
+    end
 
--- Shutdown servidor
-local toggles = { LagFireX = false }
-local VirtualUser = game:GetService("VirtualUser")
+    if #targets == 0 then return false end
 
-local function clickNormally(object)
-   local clickDetector = object:FindFirstChildWhichIsA("ClickDetector")
-   if clickDetector then
-      fireclickdetector(clickDetector)
-   end
+    for _, targetPlayer in ipairs(targets) do
+        pcall(function()
+            if command == "kick" then
+                targetPlayer:Kick("Você foi kickado pelo admin")
+            elseif command == "ban" then
+                targetPlayer:Kick("Você foi banido pelo admin")
+            elseif command == "kill" then
+                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                    targetPlayer.Character.Humanoid.Health = 0
+                end
+            elseif command == "respawn" then
+                targetPlayer:LoadCharacter()
+            elseif command == "speed" then
+                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                    local h = targetPlayer.Character.Humanoid
+                    h.WalkSpeed = h.WalkSpeed == 16 and 32 or 16
+                end
+            elseif command == "godmode" then
+                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                    local h = targetPlayer.Character.Humanoid
+                    h.MaxHealth = math.huge
+                    h.Health = math.huge
+                end
+            elseif command == "fly" then
+                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local root = targetPlayer.Character.HumanoidRootPart
+                    if root:FindFirstChild("FlyVelocity") then
+                        root.FlyVelocity:Destroy()
+                        root.FlyGyro:Destroy()
+                    else
+                        local bv = Instance.new("BodyVelocity")
+                        bv.Name = "FlyVelocity"
+                        bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+                        bv.Velocity = Vector3.new(0, 0, 0)
+                        bv.Parent = root
+                        local bg = Instance.new("BodyGyro")
+                        bg.Name = "FlyGyro"
+                        bg.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+                        bg.CFrame = root.CFrame
+                        bg.Parent = root
+                        spawn(function()
+                            while bv.Parent do
+                                local h = targetPlayer.Character:FindFirstChild("Humanoid")
+                                if h then
+                                    bv.Velocity = h.MoveDirection * 50 + Vector3.new(0, (h.Jump and 50 or 0), 0)
+                                end
+                                bg.CFrame = root.CFrame
+                                task.wait()
+                            end
+                        end)
+                    end
+                end
+            elseif command == "jail" then
+                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local root = targetPlayer.Character.HumanoidRootPart
+                    local jail = Instance.new("Model")
+                    jail.Name = "AdminJail_" .. targetPlayer.Name
+                    jail.Parent = workspace
+                    local size, height = 8, 12
+                    local function wall(s, p)
+                        local w = Instance.new("Part")
+                        w.Size = s
+                        w.Position = root.Position + p
+                        w.Anchored = true
+                        w.CanCollide = true
+                        w.Parent = jail
+                    end
+                    wall(Vector3.new(0.5, height, size), Vector3.new(-size/2, height/2, 0))
+                    wall(Vector3.new(0.5, height, size), Vector3.new(size/2, height/2, 0))
+                    wall(Vector3.new(size, height, 0.5), Vector3.new(0, height/2, -size/2))
+                    wall(Vector3.new(size, height, 0.5), Vector3.new(0, height/2, size/2))
+                    wall(Vector3.new(size, 0.5, size), Vector3.new(0, height, 0))
+                    wall(Vector3.new(size, 0.5, size), Vector3.new(0, 0, 0))
+                    if targetPlayer.Character:FindFirstChild("Humanoid") then
+                        targetPlayer.Character.Humanoid.WalkSpeed = 0
+                        targetPlayer.Character.Humanoid.JumpPower = 0
+                    end
+                end
+            elseif command == "unjail" then
+                local jail = workspace:FindFirstChild("AdminJail_" .. targetPlayer.Name)
+                if jail then
+                    jail:Destroy()
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                        targetPlayer.Character.Humanoid.WalkSpeed = 16
+                        targetPlayer.Character.Humanoid.JumpPower = 50
+                    end
+                end
+            elseif command == "freeze" then
+                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                    local h = targetPlayer.Character.Humanoid
+                    h.WalkSpeed = 0
+                    h.JumpPower = 0
+                    h.PlatformStand = true
+                end
+            elseif command == "unfreeze" then
+                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                    local h = targetPlayer.Character.Humanoid
+                    h.WalkSpeed = 16
+                    h.JumpPower = 50
+                    h.PlatformStand = false
+                end
+            end
+        end)
+    end
 end
 
-local function lagarJogoFireX(fireXPath, maxTeleports)
-   if fireXPath then
-      local teleportCount = 0
-      local connection
-      connection = RunService.Heartbeat:Connect(function()
-         if not toggles.LagFireX or teleportCount >= maxTeleports then
-            connection:Disconnect()
-            return
-         end
-         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = fireXPath.CFrame
-         clickNormally(fireXPath)
-         teleportCount = teleportCount + 1
-      end)
+player.Chatted:Connect(function(msg)
+    local args = string.split(msg, " ")
+    local cmd = args[1]
+    if not cmd or cmd:sub(1,1) ~= "/" then return end
+    cmd = cmd:sub(2):lower()
+    local target = args[2]
+    ADM.Execute(cmd, target)
+end)
 
-      task.delay(300, function()
-         if toggles.LagFireX then
-            toggles.LagFireX = false
-            connection:Disconnect()
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 900000, 0)
-
-            RunService.Heartbeat:Connect(function()
-               VirtualUser:CaptureController()
-               VirtualUser:ClickButton1(Vector2.new(500, 500))
-            end)
-         end
-      end)
-   else
-      warn("FireX não encontrado.")
-   end
-end
-
-Tab:CreateToggle({
-   Name = "Shutdown Servidor",
-   CurrentValue = false,
-   Flag = "ShutdownServ",
-   Callback = function(state)
-      toggles.LagFireX = state
-      if state then
-         local fireXPath = workspace:FindFirstChild("WorkspaceCom")
-            and workspace.WorkspaceCom:FindFirstChild("001_GiveTools")
-            and workspace.WorkspaceCom["001_GiveTools"]:FindFirstChild("FireX")
-
-         if fireXPath then
-            lagarJogoFireX(fireXPath, 999999999)
-         else
-            warn("FireX não encontrado.")
-         end
-      else
-         print("Shutdown Servidor desativado.")
-      end
-   end
-})
+return ADM
