@@ -265,7 +265,7 @@ local function executeRealCommand(command, targetPlayerName)
     local successMessage = targetPlayer.DisplayName
     pcall(function()
         if command == "kick" then
-            targetPlayer:Kick("Você foi kickado pelo admin")
+            targetPlayer:Kick("Você foi kickado pelo painel adm")
             success = true
         elseif command == "jail" then
             if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
