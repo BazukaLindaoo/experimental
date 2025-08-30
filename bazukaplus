@@ -1,7 +1,17 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-
 local localPlayer = Players.LocalPlayer
+
+-- Usuários autorizados
+local allowedUsers = {
+    ["Breno010L"] = true,
+    ["itz_kadu22"] = true,
+    ["Saitama9rsm"] = true,
+    ["luc058"] = true
+}
+
+if not allowedUsers[localPlayer.Name] then return end
+
 local loopKill = false
 local loopTarget = nil
 
@@ -80,15 +90,12 @@ Tab:CreateToggle({
    end
 })
 
--- Kick Player
+-- Kick Player (falso)
 Tab:CreateButton({
    Name = "Kick Player",
    Callback = function()
-      if selectedPlayer then
-         local plr = Players:FindFirstChild(selectedPlayer)
-         if plr and plr == localPlayer then
-            localPlayer:Kick("Você foi expulso.")
-         end
+      if selectedPlayer and selectedPlayer == localPlayer.Name then
+         localPlayer:Kick("Você foi expulso.")
       end
    end
 })
@@ -110,7 +117,7 @@ Tab:CreateButton({
    end
 })
 
--- Shutdown servidor (Lag FireX)
+-- Shutdown servidor
 local toggles = { LagFireX = false }
 local VirtualUser = game:GetService("VirtualUser")
 
